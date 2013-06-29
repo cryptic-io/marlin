@@ -1,32 +1,14 @@
 (ns marlin.handler
   (:use compojure.core)
   (:require [compojure.handler :as handler]
-            [compojure.route :as route]))
+            [compojure.route :as route]
+            [marlin.fs :as fs]))
 
-(defn lazy-test
-  ([] (lazy-test 1))
-  ([n] (when (< n 5) (cons n (lazy-seq (lazy-test (inc n)))))))
-(take 8 (lazy-test))
-
-(defn- read-or-nil [stream]
-  (let [buf (byte-array 2)]
-    (when-not (= -1 (.read stream buf))
-      buf)))
-
-(defn byte-chunk-seq [stream]
-  (cons (read-or-nil stream) (lazy-seq (byte-chunk-seq stream))))
-
-(with-open [rdr (java.io.FileInputStream. "/tmp/wut")]
-  (take 2 (byte-chunk-seq rdr)))
-
-(defn safe-read-to-file
-  [stream fh]
-  (str (byte-chunk-seq stream)))
-  ;;(let [sha java.security.MessageDigest/getInstance "SHA-1"
-  ;;      buf (byte-array 1024)]
-  ;;  (.reset sha)
-  ;;  (doall
-  ;;    (reduce (fn [sha 
+(comment
+(with-open [rdr (java.io.FileInputStream. "/tmp/wut")
+            wtr (java.io.FileOutputStream. "/tmp/wut2")]
+  (fs/safe-read-to-write rdr wtr "aa18a208c7f07eb809473b27beae91777c1c7fbf"))
+)
 
 (defroutes app-routes
   (GET "/" [] "Some info would probably go here")
