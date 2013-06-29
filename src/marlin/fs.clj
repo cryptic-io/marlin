@@ -9,8 +9,11 @@
   (let [buf (byte-array BUFSIZE)
         cnt (.read stream buf)]
     (if (= BUFSIZE cnt)
-      buf
-      (when (< 0 cnt) (java.util.Arrays/copyOfRange buf 0 cnt)))))
+      buf                 ; - We filled the buffer, we can just return it
+      (cond (> 0 cnt) nil ; - Less than zero means the stream is closed
+            (= 0 cnt) '() ; - Zero just means nothing currently on the stream
+            :else         ; - Otherwise copy what we got into a buffer of right size
+              (java.util.Arrays/copyOfRange buf 0 cnt)))))
 
 (defn- byte-chunk-seq
   "Given an InputStream returns a lazy sequence of byte-arrays from reading it"
