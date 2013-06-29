@@ -2,6 +2,7 @@
   (:use compojure.core)
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
+            [cheshire.core :refer :all]
             [marlin.fs :as fs]
             [marlin.db :as db]))
 
@@ -25,13 +26,23 @@
                         (fs/safe-read-to-write body fileout filehash))]
 
             ;If the write was successful we save stuff in db and send back 200
-            (do (db/set-file-size filename size)
-                (db/set-file-hash filename filehash)
+            (do (db/set-file-attribute filename "size" size)
+                (db/set-file-attribute filename "hash" filehash)
                 {:status 200})
 
             ;If it wasn't we delete what we just wrote and send back 400
             (do (.delete (java.io.File. fullname))
                 {:status 400 :body "File hash doesn't match"})))))
+
+  (GET "/:fn/all" {{ filename :fn } :params}
+    (if-let [all (db/get-all-file-attributes filename)]
+      {:status 200 :body (generate-string all)}
+      {:status 404}))
+
+  (GET "/:fn/:attr" {{ filename :fn attr :attr} :params}
+    (if-let [value (db/get-file-attribute filename attr)]
+      {:status 200 :body value}
+      {:status 404}))
 
   (route/resources "/")
   (route/not-found "Not Found"))

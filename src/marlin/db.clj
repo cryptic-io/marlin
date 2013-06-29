@@ -4,44 +4,39 @@
 (def server1-conn {:pool {} :spec {:host "localhost" :port 6379}})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
-(defn- file-key [file-name] (str "file:" file-name))
+(defn- file-metadata-key [filename] (str "metadata:" filename))
+(defn- file-lock-key [filename] (str "lock:" filename))
 
 (defn lock-file
   "Attempts to lock a file. Returns true if lock successful, false if already locked"
   [filename]
-  (let [k (file-key filename)]
-    (not (zero? (wcar* (car/hsetnx k "locked" 1))))))
+  (let [k (file-lock-key filename)]
+    (not (zero? (wcar* (car/setnx k 1))))))
 
 (defn unlock-file
   "Unlocks a file if it was locked. Not sure why this would ever be necessary."
   [filename]
-  (let [k (file-key filename)]
-    (wcar* (car/hdel k "locked"))
+  (let [k (file-lock-key filename)]
+    (wcar* (car/hdel k))
     nil))
 
-(defn set-file-size
-  "Sets the size of the file in bytes"
-  [filename size]
-  (let [k (file-key filename)]
-    (wcar* (car/hset k "size" size))
+(defn set-file-attribute
+  "Sets an attribute for a file"
+  [filename attr value]
+  (let [k (file-metadata-key filename)]
+    (wcar* (car/hset k attr value))
     nil))
 
-(defn get-file-size
-  "Gets the size of the file in bytes, or nil"
+(defn get-file-attribute
+  "Gets an attribute for a file (nil if attribute not set or file doesn't exist)"
+  [filename attr]
+  (let [k (file-metadata-key filename)]
+    (wcar* (car/hget k attr))))
+
+(defn get-all-file-attributes
+  "Gets all attributes for a file as a map, or nil if file doesn't exist"
   [filename]
-  (let [k (file-key filename)]
-    (when-let [sizestr (wcar* (car/hget k "size"))]
-      (Integer/valueOf sizestr))))
-
-(defn set-file-hash
-  "Sets the hash string of the file"
-  [filename fh]
-  (let [k (file-key filename)]
-    (wcar* (car/hset k "hash" fh))
-    nil))
-
-(defn get-file-hash
-  "Gets the hash string of the file, or nil"
-  [filename]
-  (let [k (file-key filename)]
-    (wcar* (car/hget k "hash"))))
+  (let [k (file-metadata-key filename)
+        r (reduce (fn [m [k v]] (assoc m k v)) {}
+            (partition 2 (wcar* (car/hgetall k))))]
+    (when-not (empty? r) r)))
