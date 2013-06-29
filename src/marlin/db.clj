@@ -21,11 +21,11 @@
     (wcar* (car/hdel k))
     nil))
 
-(defn set-file-attribute
+(defn set-file-attributes
   "Sets an attribute for a file"
-  [filename attr value]
+  [filename & keyvals]
   (let [k (file-metadata-key filename)]
-    (wcar* (car/hset k attr value))
+    (wcar* (apply car/hmset k keyvals))
     nil))
 
 (defn get-file-attribute
@@ -46,4 +46,4 @@
   "Returns list of all files in database"
   []
   (map #(second (s/split % #":"))
-    (wcar* (car/keys (file-lock-key "*")))))
+    (wcar* (car/keys (file-metadata-key "*")))))

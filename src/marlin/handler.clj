@@ -29,8 +29,7 @@
                         (fs/safe-read-to-write body fileout filehash))]
 
             ;If the write was successful we save stuff in db and send back 200
-            (do (db/set-file-attribute filename "size" size)
-                (db/set-file-attribute filename "hash" filehash)
+            (do (db/set-file-attributes filename "size" size "hash" filehash)
                 {:status 200})
 
             ;If it wasn't we delete what we just wrote and send back 400
