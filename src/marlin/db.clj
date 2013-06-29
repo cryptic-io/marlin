@@ -1,5 +1,6 @@
 (ns marlin.db
-  (:require [taoensso.carmine :as car :refer (wcar)]))
+  (:require [taoensso.carmine :as car :refer (wcar)]
+            [clojure.string :as s]))
 
 (def server1-conn {:pool {} :spec {:host "localhost" :port 6379}})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
@@ -40,3 +41,9 @@
         r (reduce (fn [m [k v]] (assoc m k v)) {}
             (partition 2 (wcar* (car/hgetall k))))]
     (when-not (empty? r) r)))
+
+(defn get-all-files
+  "Returns list of all files in database"
+  []
+  (map #(second (s/split % #":"))
+    (wcar* (car/keys (file-lock-key "*")))))

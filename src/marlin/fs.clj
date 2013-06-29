@@ -56,3 +56,8 @@
   [filename]
   (let [first-letters (map str (take 3 filename))]
     (apply path-join ROOT first-letters)))
+
+(defn full-name
+  "Returns the absolute path of where a file will be housed"
+  [filename]
+  (path-join (full-path filename) filename))

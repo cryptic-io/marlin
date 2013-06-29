@@ -37,6 +37,18 @@
             (do (.delete (java.io.File. fullname))
                 {:status 400 :body "File hash doesn't match"})))))
 
+  (GET "/all" {{ json :json } :params}
+    (let [all (db/get-all-files)]
+      (if (and json (not (= json "0")))
+        {:status 200 :body (generate-string all)}
+        {:status 200 :body (apply str (interpose \newline all))})))
+
+  (GET "/:fn" {{ filename :fn } :params}
+    (let [fullname (fs/full-name filename)]
+      (if (.exists (java.io.File. fullname))
+        {:status 200 :body (slurp fullname)}
+        {:status 404})))
+
   (GET "/:fn/all" {{ filename :fn } :params}
     (if-let [all (db/get-all-file-attributes filename)]
       {:status 200 :body (generate-string all)}
