@@ -33,3 +33,19 @@
       (.update sha buf))
     (let [actual-fh (apply str (map #(format "%02x" %) (.digest sha)))]
       (= fh actual-fh))))
+
+(defn path-join
+  "Joins all variatic arguments into a properly formatted filesystem path"
+  [parent & children]
+  (.getPath
+    (reduce
+      (fn [f filename] (java.io.File. f filename))
+      (java.io.File. parent)
+      children)))
+
+(def ROOT "/tmp/marlin-test/")
+(defn full-path
+  "Returns the full path that will house a file"
+  [filename]
+  (let [first-letters (map str (take 3 filename))]
+    (apply path-join ROOT first-letters)))
