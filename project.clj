@@ -2,6 +2,7 @@
   :description "A simple REST api for file access"
   :url "http://github.com/cryptic-io/marlin"
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [org.clojure/tools.reader "0.7.4"]
                  [com.taoensso/carmine "2.0.0-beta2"]
                  [cheshire "5.2.0"]
                  [compojure "1.1.5"]]
