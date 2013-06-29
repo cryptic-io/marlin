@@ -2,7 +2,8 @@
   (:use compojure.core)
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
-            [marlin.fs :as fs]))
+            [marlin.fs :as fs]
+            [marlin.db :as db]))
 
 (comment
 (with-open [rdr (java.io.FileInputStream. "/tmp/wut")
@@ -14,18 +15,23 @@
   (GET "/" [] "Some info would probably go here")
 
   (PUT "/:fn" {{ filename :fn filehash :hash } :params body :body}
-    (let [path (fs/full-path filename)
-          fullname (fs/path-join path filename)]
-      (.mkdirs (java.io.File. path))
-      (if (with-open [fileout (java.io.FileOutputStream. fullname)]
-            (fs/safe-read-to-write body fileout filehash))
+    (if-not (db/lock-file filename)
 
-          ;If the write was successful we send back 200
-          {:status 200}
+      {:status 400 :body "File already exists"}
+      (let [path (fs/full-path filename)
+            fullname (fs/path-join path filename)]
+        (.mkdirs (java.io.File. path))
+        (if-let [size (with-open [fileout (java.io.FileOutputStream. fullname)]
+                        (fs/safe-read-to-write body fileout filehash))]
 
-          ;If it wasn't we delete what we just wrote and send back 400
-          (do (.delete (java.io.File. fullname))
-              {:status 400}))))
+            ;If the write was successful we save stuff in db and send back 200
+            (do (db/set-file-size filename size)
+                (db/set-file-hash filename filehash)
+                {:status 200})
+
+            ;If it wasn't we delete what we just wrote and send back 400
+            (do (.delete (java.io.File. fullname))
+                {:status 400 :body "File hash doesn't match"})))))
 
   (route/resources "/")
   (route/not-found "Not Found"))
