@@ -18,7 +18,10 @@
   (PUT "/:fn" {{ filename :fn filehash :hash } :params body :body}
     (if-not (db/lock-file filename)
 
+      ;If we can't lock the file then 400
       {:status 400 :body "File already exists"}
+
+      ;If we can then try to put the file
       (let [path (fs/full-path filename)
             fullname (fs/path-join path filename)]
         (.mkdirs (java.io.File. path))
