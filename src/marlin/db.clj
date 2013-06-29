@@ -18,7 +18,7 @@
   "Unlocks a file if it was locked. Not sure why this would ever be necessary."
   [filename]
   (let [k (file-lock-key filename)]
-    (wcar* (car/hdel k))
+    (wcar* (car/del k))
     nil))
 
 (defn set-file-attributes
@@ -47,3 +47,10 @@
   []
   (map #(second (s/split % #":"))
     (wcar* (car/keys (file-metadata-key "*")))))
+
+(defn del-file
+  "Deletes a file's metadata entry"
+  [filename]
+  (let [k (file-metadata-key filename)]
+    (wcar* (car/del k))
+    nil))

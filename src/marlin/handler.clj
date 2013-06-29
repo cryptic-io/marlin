@@ -62,6 +62,12 @@
       {:status 200 :body value}
       {:status 404}))
 
+  (DELETE "/:fn" {{ filename :fn } :params}
+    (.delete (java.io.File. (fs/full-name filename)))
+    (db/del-file filename)
+    (db/unlock-file filename)
+    {:status 200})
+
   (route/resources "/")
   (route/not-found "Not Found"))
 
