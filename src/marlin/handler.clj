@@ -42,6 +42,10 @@
         {:status 200 :body (generate-string all)}
         {:status 200 :body (apply str (interpose \newline all))})))
 
+  (GET "/allattributes" {}
+    (generate-string
+      (reduce #(assoc %1 %2 (db/get-all-file-attributes %2)) {} (db/get-all-files))))
+
   (GET "/:fn" {{ filename :fn } :params}
     (let [fullname (fs/full-name filename)]
       (if (.exists (java.io.File. fullname))
