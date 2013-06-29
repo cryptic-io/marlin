@@ -23,16 +23,23 @@
 
 (defn safe-read-to-write
   "Reads in-stream (an InputStream) into out-stream (an OutputStream), and checks
-  the SHA1 hash string of what was read/written against fh"
+  the SHA1 hash string of what was read/written against fh. Returns the amount
+  transferred if the hash checks out, false otherwise"
   [in-stream out-stream fh]
-  (let [sha (java.security.MessageDigest/getInstance "SHA-1")
-        buf-seq (byte-chunk-seq in-stream)]
-    (.reset sha)
-    (doseq [buf buf-seq]
-      (.write out-stream buf)
-      (.update sha buf))
-    (let [actual-fh (apply str (map #(format "%02x" %) (.digest sha)))]
-      (= fh actual-fh))))
+  (let [
+    sha (java.security.MessageDigest/getInstance "SHA-1")
+    buf-seq (byte-chunk-seq in-stream)
+    size
+      (reduce
+        (fn [sizeacc buf]
+          (.write out-stream buf)
+          (.update sha buf)
+          (+ sizeacc (count buf)))
+        0 buf-seq)
+    actual-fh
+      (apply str (map #(format "%02x" %) (.digest sha)))]
+
+    (and (= fh actual-fh) size)))
 
 (defn path-join
   "Joins all variatic arguments into a properly formatted filesystem path"
