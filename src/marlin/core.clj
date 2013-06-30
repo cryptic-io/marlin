@@ -31,6 +31,7 @@
       :else (println default-config-msg))
 
   (db/init)
-  (run-jetty handler/app-routes {:host (config/cget :rest :host)
-                                 :port (config/cget :rest :port)
-                                 :join? false})))
+  (run-jetty handler/app
+    {:host (config/cget :rest :host)
+     :port (config/cget :rest :port)
+     :join? false})))

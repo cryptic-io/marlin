@@ -28,6 +28,7 @@
 
             ;If it wasn't we delete what we just wrote and send back 400
             (do (.delete (java.io.File. fullname))
+                (db/unlock-file filename)
                 {:status 400 :body "File hash doesn't match"})))))
 
   (GET "/all" {{ json :json } :params}
