@@ -34,6 +34,5 @@
   (db/init)
   (fs/init)
   (run-jetty handler/app
-    {:host (config/cget :rest :host)
-     :port (config/cget :rest :port)
-     :join? false})))
+    (assoc (config/cget :rest)
+           :join false))))

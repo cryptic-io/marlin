@@ -2,30 +2,33 @@
     (:require [clojure.tools.reader.edn :as edn]))
 
 (def default-config-str "
-; This is an example configuration for marlin. It contains all the default values for the various
-; options, change them as needed.
+;; This is an example configuration for marlin. It contains all the default values for
+;; the various options, change them as needed.
 {
 
-    ;Information marlin needs to talk to its redis server
+    ;; Information marlin needs to talk to its redis server
     :redis {
-             ;Hostname redis lives on. Could also be ip-address (also as string)
+             ;; Hostname redis lives on. Could also be ip-address (also as string)
              :host \"localhost\"
 
-             ;Port redis lives on
+             ;; Port redis lives on
              :port 6379
 
-             ;Database number that you want to use
+             ;; Database number that you want to use
              :db 0
 
            }
 
-    ;Options for the HTTP REST API (OMG CAPS)
+    ;; Options for the HTTP REST API (OMG CAPS). These are the most common ones that'll
+    ;; be used, you can find a full list of available options at:
+    ;; http://mmcgrana.github.io/ring/ring.adapter.jetty.html
+    ;; (Note: join? will always be set to false)
     :rest {
             :host \"0.0.0.0\"
             :port 3000
           }
 
-    ;The root of the structure marlin will put files in
+    ;; The root of the structure marlin will put files in
     :root \"/tmp/marlin\"
 
 }
