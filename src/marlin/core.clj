@@ -4,7 +4,8 @@
         [clojure.tools.cli :only [cli]])
   (:require [marlin.handler :as handler]
             [marlin.config  :as config]
-            [marlin.db      :as db]))
+            [marlin.db      :as db]
+            [marlin.fs      :as fs]))
 
 (def description
   "A simple REST api for interacting with a file system, using redis as a backend")
@@ -31,6 +32,7 @@
       :else (println default-config-msg))
 
   (db/init)
+  (fs/init)
   (run-jetty handler/app
     {:host (config/cget :rest :host)
      :port (config/cget :rest :port)

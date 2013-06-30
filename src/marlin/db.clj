@@ -6,9 +6,10 @@
 (defn opts []
   {:pool {} :spec (config/cget :redis)})
 
-(def conn (atom opts))
+(def conn (atom nil))
 (defn init []
   (reset! conn (opts)))
+(init)
 
 (defmacro wcar* [& body] `(car/wcar @conn ~@body))
 

@@ -1,5 +1,6 @@
 (ns marlin.fs
-  (:import java.security.MessageDigest))
+  (:import java.security.MessageDigest)
+  (:require [marlin.config :as config]))
 
 (def BUFSIZE 1024)
 (defn- read-or-nil
@@ -50,12 +51,16 @@
       (java.io.File. parent)
       children)))
 
-(def ROOT "/tmp/marlin-test/")
+(def root (atom nil))
+(defn init []
+  (reset! root (config/cget :root)))
+(init)
+
 (defn full-path
   "Returns the full path that will house a file"
   [filename]
   (let [first-letters (map str (take 3 filename))]
-    (apply path-join ROOT first-letters)))
+    (apply path-join @root first-letters)))
 
 (defn full-name
   "Returns the absolute path of where a file will be housed"

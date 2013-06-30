@@ -25,6 +25,9 @@
             :port 3000
           }
 
+    ;The root of the structure marlin will put files in
+    :root \"/tmp/marlin\"
+
 }
 ")
 
