@@ -6,12 +6,6 @@
             [marlin.fs :as fs]
             [marlin.db :as db]))
 
-(comment
-(with-open [rdr (java.io.FileInputStream. "/tmp/wut")
-            wtr (java.io.FileOutputStream. "/tmp/wut2")]
-  (fs/safe-read-to-write rdr wtr "aa18a208c7f07eb809473b27beae91777c1c7fbf"))
-)
-
 (defroutes app-routes
   (GET "/" [] "Some info would probably go here")
 

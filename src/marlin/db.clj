@@ -1,9 +1,16 @@
 (ns marlin.db
   (:require [taoensso.carmine :as car :refer (wcar)]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [marlin.config :as config]))
 
-(def server1-conn {:pool {} :spec {:host "localhost" :port 6379}})
-(defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
+(defn opts []
+  {:pool {} :spec (config/cget :redis)})
+
+(def conn (atom opts))
+(defn init []
+  (reset! conn (opts)))
+
+(defmacro wcar* [& body] `(car/wcar @conn ~@body))
 
 (defn- file-metadata-key [filename] (str "metadata:" filename))
 (defn- file-lock-key [filename] (str "lock:" filename))
