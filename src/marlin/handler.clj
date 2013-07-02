@@ -9,6 +9,18 @@
 
 (def at-pool (mk-pool))
 
+(defn- json-200
+  [raw]
+  { :status 200
+    :body (generate-string raw)
+    :headers { "Content-Type" "application/json" } })
+
+(defn- text-200
+  [raw]
+  { :status 200
+    :body raw
+    :headers { "Content-Type" "text/plain" } })
+
 (defroutes app-routes
   (GET "/" [] "Some info would probably go here")
 
@@ -37,25 +49,28 @@
   (GET "/all" {{ json :json } :params}
     (let [all (db/get-all-files)]
       (if (and json (not (= json "0")))
-        {:status 200 :body (generate-string all)}
-        {:status 200 :body (apply str (interpose \newline all))})))
+        (json-200 all)
+        (text-200 (apply str (interpose \newline all))))))
 
+  ;; TODO this is not atomic, might be better to just take it out
   (GET "/allattributes" {}
-    (generate-string
+    (json-200
       (reduce #(assoc %1 %2 (db/get-all-file-attributes %2)) {} (db/get-all-files))))
 
   (GET "/:fn" {{ filename :fn } :params}
     (let [fullname (fs/full-name filename)]
       (when (.exists (java.io.File. fullname))
-        {:status 200 :body (slurp fullname)})))
+        { :status 200
+          :body (slurp fullname)
+          :headers { "Content-Type" "application/octet-stream" }})))
 
   (GET "/:fn/all" {{ filename :fn } :params}
     (when-let [all (db/get-all-file-attributes filename)]
-      {:status 200 :body (generate-string all)}))
+      (json-200 all)))
 
   (GET "/:fn/:attr" {{ filename :fn attr :attr} :params}
     (when-let [value (db/get-file-attribute filename attr)]
-      {:status 200 :body value}))
+      (text-200 value)))
 
   (DELETE "/:fn" {{ filename :fn delay-amnt :delay } :params}
     (let [dodel (fn [] (.delete (java.io.File. (fs/full-name filename)))

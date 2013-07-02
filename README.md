@@ -100,7 +100,6 @@ the command.
 
 * A command to tell marlin to synchronize redis with the filesystem, and an option in the config to
 do so on startup.
-* Proper content-types being returned (looking at you, application/json!)
 
 # License
 
