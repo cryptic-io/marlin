@@ -58,12 +58,10 @@
       {:status 200 :body value}))
 
   (DELETE "/:fn" {{ filename :fn delay-amnt :delay } :params}
-    (let [dodel (fn []
-      (.delete (java.io.File. (fs/full-name filename)))
-      (db/del-file filename)
-      (db/unlock-file filename)
-      {:status 200}
-      )]
+    (let [dodel (fn [] (.delete (java.io.File. (fs/full-name filename)))
+                       (db/del-file filename)
+                       (db/unlock-file filename)
+                       {:status 200}) ]
       (if-not (nil? delay-amnt)
         (do (at (+ (now) (Integer/valueOf delay-amnt)) dodel at-pool) {:status 200})
         (dodel))))
