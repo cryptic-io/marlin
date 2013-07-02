@@ -31,6 +31,11 @@
     ;; The root of the structure marlin will put files in
     :root \"/tmp/marlin\"
 
+    ;; Whether or not to run a database sync on starting up. This will happen before
+    ;; any listen sockets are set up, and involves WIPING all data out of the database
+    ;; and using data from the filesystem to repopulate it with fully correct data.
+    :sync-on-start true
+
 }
 ")
 

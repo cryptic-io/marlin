@@ -66,3 +66,27 @@
   "Returns the absolute path of where a file will be housed"
   [filename]
   (path-join (full-path filename) filename))
+
+(defn file-hash
+  "Returns the sha1 hash string of the given file path"
+  [filepath]
+  (let [sha (java.security.MessageDigest/getInstance "SHA-1")]
+    (with-open [rdr (java.io.FileInputStream. filepath)]
+      (doseq [buf (byte-chunk-seq rdr)] (.update sha buf))
+      (apply str (map #(format "%02x" %) (.digest sha))))))
+
+(defn file-size
+  "Returns the size in bytes of the given file path"
+  [filepath]
+  (.length (java.io.File. filepath)))
+
+(defn file-walk
+  "Goes through all the files in marlin's filesystem and runs (fun <filestr>) on each
+  one, where <filestr> is the absolute filename as a string"
+  [fun]
+  (let [filenames (->> (java.io.File. @root)
+                       (file-seq)
+                       (remove #(.isDirectory %))
+                       (map #(.getName %))
+                       )]
+    (doseq [filename filenames] (fun filename))))

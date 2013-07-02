@@ -62,3 +62,7 @@
   (let [k (file-metadata-key filename)]
     (wcar* (car/del k))
     nil))
+
+(defn flushdb
+  "Deletes everything in the db"
+  [] (wcar* (car/flushall)))

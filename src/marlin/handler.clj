@@ -21,6 +21,22 @@
     :body raw
     :headers { "Content-Type" "text/plain" } })
 
+(defn- set-all-attributes
+  [filename size filehash]
+  (db/lock-file filename)
+  (db/set-file-attributes filename "size" size "hash" filehash ))
+
+(defn sync-db-with-fs
+  "Clears the database and loads it with fully correct data about what it's watching
+  on the filesystem"
+  []
+  (db/flushdb)
+  (fs/file-walk
+    #(let [fullname (fs/full-name %)
+           fhash (fs/file-hash fullname)
+           fsize (fs/file-size fullname)]
+      (set-all-attributes % fsize fhash))))
+
 (defroutes app-routes
   (GET "/" [] "Some info would probably go here")
 
@@ -38,7 +54,7 @@
                         (fs/safe-read-to-write body fileout filehash))]
 
             ;If the write was successful we save stuff in db and send back 200
-            (do (db/set-file-attributes filename "size" size "hash" filehash)
+            (do (set-all-attributes filename size filehash)
                 {:status 200})
 
             ;If it wasn't we delete what we just wrote and send back 400
@@ -56,6 +72,10 @@
   (GET "/allattributes" {}
     (json-200
       (reduce #(assoc %1 %2 (db/get-all-file-attributes %2)) {} (db/get-all-files))))
+
+  (GET "/sync" {}
+    (future (sync-db-with-fs))
+    {:status 200})
 
   (GET "/:fn" {{ filename :fn } :params}
     (let [fullname (fs/full-name filename)]

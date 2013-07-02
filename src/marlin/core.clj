@@ -33,6 +33,11 @@
 
   (db/init)
   (fs/init)
+
+  (when (config/cget :sync-on-start)
+    (println "Wiping database and synchronizing it with the filesystem")
+    (handler/sync-db-with-fs))
+
   (run-jetty handler/app
     (assoc (config/cget :rest)
            :join false))))

@@ -98,8 +98,7 @@ the command.
 
 ## TODO
 
-* A command to tell marlin to synchronize redis with the filesystem, and an option in the config to
-do so on startup.
+* Gooder logging
 
 # License
 
