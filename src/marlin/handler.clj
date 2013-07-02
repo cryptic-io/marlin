@@ -46,19 +46,16 @@
 
   (GET "/:fn" {{ filename :fn } :params}
     (let [fullname (fs/full-name filename)]
-      (if (.exists (java.io.File. fullname))
-        {:status 200 :body (slurp fullname)}
-        {:status 404})))
+      (when (.exists (java.io.File. fullname))
+        {:status 200 :body (slurp fullname)})))
 
   (GET "/:fn/all" {{ filename :fn } :params}
-    (if-let [all (db/get-all-file-attributes filename)]
-      {:status 200 :body (generate-string all)}
-      {:status 404}))
+    (when-let [all (db/get-all-file-attributes filename)]
+      {:status 200 :body (generate-string all)}))
 
   (GET "/:fn/:attr" {{ filename :fn attr :attr} :params}
-    (if-let [value (db/get-file-attribute filename attr)]
-      {:status 200 :body value}
-      {:status 404}))
+    (when-let [value (db/get-file-attribute filename attr)]
+      {:status 200 :body value}))
 
   (DELETE "/:fn" {{ filename :fn delay-amnt :delay } :params}
     (let [dodel (fn []
@@ -72,7 +69,7 @@
         (dodel))))
 
   (route/resources "/")
-  (route/not-found "Not Found"))
+  (route/not-found ""))
 
 (def app
   (handler/api app-routes))
