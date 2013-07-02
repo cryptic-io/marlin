@@ -1,10 +1,13 @@
 (ns marlin.handler
-  (:use compojure.core)
+  (:use compojure.core
+        [overtone.at-at :only [at now mk-pool]])
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
             [cheshire.core :refer :all]
             [marlin.fs :as fs]
             [marlin.db :as db]))
+
+(def at-pool (mk-pool))
 
 (defroutes app-routes
   (GET "/" [] "Some info would probably go here")
@@ -57,11 +60,16 @@
       {:status 200 :body value}
       {:status 404}))
 
-  (DELETE "/:fn" {{ filename :fn } :params}
-    (.delete (java.io.File. (fs/full-name filename)))
-    (db/del-file filename)
-    (db/unlock-file filename)
-    {:status 200})
+  (DELETE "/:fn" {{ filename :fn delay-amnt :delay } :params}
+    (let [dodel (fn []
+      (.delete (java.io.File. (fs/full-name filename)))
+      (db/del-file filename)
+      (db/unlock-file filename)
+      {:status 200}
+      )]
+      (if-not (nil? delay-amnt)
+        (do (at (+ (now) (Integer/valueOf delay-amnt)) dodel at-pool) {:status 200})
+        (dodel))))
 
   (route/resources "/")
   (route/not-found "Not Found"))

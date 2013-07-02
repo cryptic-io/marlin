@@ -7,6 +7,7 @@
                  [com.taoensso/carmine "2.0.0-beta2"]
                  [cheshire "5.2.0"]
                  [compojure "1.1.5"]
+                 [overtone/at-at "1.2.0"]
                  [ring/ring-jetty-adapter "1.2.0-RC1"]]
   :plugins [[lein-ring "0.8.5"]]
   :ring {:handler marlin.handler/app}

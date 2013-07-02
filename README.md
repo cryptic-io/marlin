@@ -90,10 +90,11 @@ exists.
 Returns the value `filename`'s `attribute` in redis. Current supported attributes are `size` and
 `hash`. Returns 404 if the file or attribute don't exist.
 
-`DELETE /<filename>`
+`DELETE /<filename>?delay=<delay>`
 
 Delete `filename`, and all of its meta-data in redis, from the filesystem, if it exists. Always
-returns 200.
+returns 200. If `delay` is specified marlin will wait that many milliseconds before executing
+the command.
 
 ## TODO
 
