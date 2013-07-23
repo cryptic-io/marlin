@@ -1,3 +1,4 @@
 * proper logging formatting
 * /all needs a trailing newline
 * try to get rid of application/octet-stream nonsense
+* fix delayed delete
