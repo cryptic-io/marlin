@@ -34,6 +34,8 @@
   (db/init)
   (fs/init)
 
+  (.mkdirs (java.io.File. (config/cget :root)))
+
   (when (config/cget :sync-on-start)
     (println "Wiping database and synchronizing it with the filesystem")
     (handler/sync-db-with-fs))
