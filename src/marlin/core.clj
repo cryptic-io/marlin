@@ -13,6 +13,22 @@
 (def default-config-msg
   "Using the default configuration. You can generate this config using the -d flag. You can change the configuration by piping the default one to a file, editing, and passing that file in using the -c flag")
 
+(defn init
+  "Sets up the internal (database connections) and external (file directory and
+  database sync) state"
+  []
+  (db/init)
+  (fs/init)
+
+  (let [file-root (java.io.File. (config/cget :root))]
+    (when-not (or (.exists file-root) (.mkdirs file-root))
+      (println "Could not create root file directory:" (config/cget :root) ", probably because of lack of permissions")))
+
+  (when (config/cget :sync-on-start)
+    (println "Wiping database and synchronizing it with the filesystem")
+    (handler/sync-db-with-fs)))
+
+
 (defn -main [& args]
   (let [[opts _ halp]
           (cli args ["-c" "--config" "Configuration file"]
@@ -31,14 +47,7 @@
       (get opts :config false) (config/load-config (opts :config))
       :else (println default-config-msg))
 
-  (db/init)
-  (fs/init)
-
-  (.mkdirs (java.io.File. (config/cget :root)))
-
-  (when (config/cget :sync-on-start)
-    (println "Wiping database and synchronizing it with the filesystem")
-    (handler/sync-db-with-fs))
+  (init)
 
   (run-jetty handler/app
     (assoc (config/cget :rest)
