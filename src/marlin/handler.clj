@@ -49,35 +49,39 @@
 (defroutes app-routes
   (GET "/" [] "Some info would probably go here")
 
-  (PUT "/:fn" {{ filename :fn filehash :hash } :params body :body}
+  (PUT "/:fn" {{ filename :fn filehash :hash } :params body :body { content-type "content-type" } :headers}
     (log/info (str "PUT " filename " " filehash " initiated"))
-    (if-not (db/lock-file filename)
+    (if-not (= content-type "application/octet-stream")
+      (do (log/warn (str "PUT " filename " not uploaded at octet-stream"))
+          {:status 400 :body "PUT file must be of Content-Type 'application/octet-stream'"})
 
-      ;If we can't lock the file then 400
-      (do (log/warn (str "PUT " filename " already exists"))
-          {:status 400 :body "File already exists"})
+      (if-not (db/lock-file filename)
 
-      ;If we can then try to put the file
-      (let [path (fs/full-path filename)
-            fullname (fs/path-join path filename)]
-        (if-not (.mkdirs (java.io.File. path))
-          (do (log/warn (str "PUT " filename " - Could not create directory: " path))
-              (db/unlock-file filename)
-              {:status 500 :body "Could not create internal directory"})
+        ;If we can't lock the file then 400
+        (do (log/warn (str "PUT " filename " already exists"))
+            {:status 400 :body "File already exists"})
 
-          (if-let [size (with-open [fileout (java.io.FileOutputStream. fullname)]
-                          (fs/safe-read-to-write body fileout filehash))]
+        ;If we can then try to put the file
+        (let [path (fs/full-path filename)
+              fullname (fs/path-join path filename)]
+          (if-not (.mkdirs (java.io.File. path))
+            (do (log/warn (str "PUT " filename " - Could not create directory: " path))
+                (db/unlock-file filename)
+                {:status 500 :body "Could not create internal directory"})
 
-              ;If the write was successful we save stuff in db and send back 200
-              (do (log/info (str "PUT " filename " successfully"))
-                  (set-all-attributes filename size filehash)
-                  {:status 200})
+            (if-let [size (with-open [fileout (java.io.FileOutputStream. fullname)]
+                            (fs/safe-read-to-write body fileout filehash))]
 
-              ;If it wasn't we delete what we just wrote and send back 400
-              (do (log/warn (str "PUT " filename " failed, incorrect hash"))
-                  (.delete (java.io.File. fullname))
-                  (db/unlock-file filename)
-                  {:status 400 :body "File hash doesn't match"}))))))
+                ;If the write was successful we save stuff in db and send back 200
+                (do (log/info (str "PUT " filename " successfully"))
+                    (set-all-attributes filename size filehash)
+                    {:status 200})
+
+                ;If it wasn't we delete what we just wrote and send back 400
+                (do (log/warn (str "PUT " filename " failed, incorrect hash"))
+                    (.delete (java.io.File. fullname))
+                    (db/unlock-file filename)
+                    {:status 400 :body "File hash doesn't match"})))))))
 
   (GET "/all" {{ json :json } :params}
     (let [all (db/get-all-files)]
