@@ -108,13 +108,16 @@
       (text-200 value)))
 
   (DELETE "/:fn" {{ filename :fn delay-amnt :delay } :params}
-    (log/info (str "DELETE " filename " in " delay-amnt " milliseconds"))
-    (let [dodel (fn [] (.delete (java.io.File. (fs/full-name filename)))
+    (let [dodel (fn [] (log/info (str "DELETE " filename))
+                       (.delete (java.io.File. (fs/full-name filename)))
                        (db/del-file filename)
                        (db/unlock-file filename)
                        {:status 200}) ]
       (if-not (nil? delay-amnt)
-        (do (at (+ (now) (Integer/valueOf delay-amnt)) dodel at-pool) {:status 200})
+        (let [delay-int (Integer/valueOf delay-amnt)]
+          (do (log/info (str "DELETE " filename " in " delay-int " milliseconds"))
+              (at (+ (now) delay-int) dodel at-pool)
+              {:status 200}))
         (dodel))))
 
   (route/resources "/")
