@@ -4,8 +4,9 @@
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
             [cheshire.core :refer :all]
-            [marlin.fs :as fs]
-            [marlin.db :as db]))
+            [marlin.fs  :as fs]
+            [marlin.db  :as db]
+            [marlin.log :as log]))
 
 (def at-pool (mk-pool))
 
@@ -41,28 +42,32 @@
   (GET "/" [] "Some info would probably go here")
 
   (PUT "/:fn" {{ filename :fn filehash :hash } :params body :body}
+    (log/info (str "PUT " filename " " filehash " initiated"))
     (if-not (db/lock-file filename)
 
       ;If we can't lock the file then 400
-      {:status 400 :body "File already exists"}
+      (do (log/warn (str "PUT " filename " already exists"))
+          {:status 400 :body "File already exists"})
 
       ;If we can then try to put the file
       (let [path (fs/full-path filename)
             fullname (fs/path-join path filename)]
         (if-not (.mkdirs (java.io.File. path))
-          (do
-            (db/unlock-file filename)
-            {:status 500 :body "Could not create internal directory"})
+          (do (log/warn (str "PUT " filename " - Could not create directory: " path))
+              (db/unlock-file filename)
+              {:status 500 :body "Could not create internal directory"})
 
           (if-let [size (with-open [fileout (java.io.FileOutputStream. fullname)]
                           (fs/safe-read-to-write body fileout filehash))]
 
               ;If the write was successful we save stuff in db and send back 200
-              (do (set-all-attributes filename size filehash)
+              (do (log/info (str "PUT " filename " successfully"))
+                  (set-all-attributes filename size filehash)
                   {:status 200})
 
               ;If it wasn't we delete what we just wrote and send back 400
-              (do (.delete (java.io.File. fullname))
+              (do (log/warn (str "PUT " filename " failed, incorrect hash"))
+                  (.delete (java.io.File. fullname))
                   (db/unlock-file filename)
                   {:status 400 :body "File hash doesn't match"}))))))
 
@@ -97,6 +102,7 @@
       (text-200 value)))
 
   (DELETE "/:fn" {{ filename :fn delay-amnt :delay } :params}
+    (log/info (str "DELETE " filename " in " delay-amnt " milliseconds"))
     (let [dodel (fn [] (.delete (java.io.File. (fs/full-name filename)))
                        (db/del-file filename)
                        (db/unlock-file filename)

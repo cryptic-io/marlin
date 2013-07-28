@@ -5,7 +5,8 @@
   (:require [marlin.handler :as handler]
             [marlin.config  :as config]
             [marlin.db      :as db]
-            [marlin.fs      :as fs]))
+            [marlin.fs      :as fs]
+            [marlin.log     :as log]))
 
 (def description
   "A simple REST api for interacting with a file system, using redis as a backend")
@@ -22,10 +23,10 @@
 
   (let [file-root (java.io.File. (config/cget :root))]
     (when-not (or (.exists file-root) (.mkdirs file-root))
-      (println "Could not create root file directory:" (config/cget :root) ", probably because of lack of permissions")))
+      (log/warn (str "Could not create root file directory: " (config/cget :root) ", probably because of lack of permissions"))))
 
   (when (config/cget :sync-on-start)
-    (println "Wiping database and synchronizing it with the filesystem")
+    (log/info "Wiping database and synchronizing it with the filesystem")
     (handler/sync-db-with-fs)))
 
 
