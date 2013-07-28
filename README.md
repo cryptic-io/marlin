@@ -71,19 +71,14 @@ has the sha1 hash of `filehash`. Returns 200 on success.
 Returns the list of all filenames currently being housed. If json is `0` (or ommitted) the list is
 simply newline separated, otherwise it comes in the form of a json list.
 
-`GET /allattributes`
-
-Returns a json-map. Each key is a filename, each value is another hash of all the attributes marlin
-has in redis about a the file (size, hash, etc...).
-
 `GET /<filename>`
 
 Returns the contents of `filename`, or 404 if it doesn't exist.
 
-`GET /<filename>/all`
+`GET /<filename>/all?json=[0|1]`
 
-Returns a json-map of all the attributes marlin has in redis about `filename`, or 404 if it doesn't
-exists.
+Returns a map of all the attributes marlin has in redis about `filename`, or 404 if it doesn't
+exists. If `json` is not set the map is returned as a newline separated list of `key value` lines.
 
 `GET /<filename>/<attribute>`
 
