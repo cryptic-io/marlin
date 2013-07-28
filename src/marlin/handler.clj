@@ -26,9 +26,9 @@
   [json]
   (and json (not (= json "0"))))
 
-(defn- interpose-append-str
-  [ch l]
-  (str (apply str (interpose ch l)) ch))
+(defn- newline-list
+  [l]
+  (apply str (map #(str % \newline) l)))
 
 (defn- set-all-attributes
   [filename size filehash]
@@ -90,7 +90,7 @@
     (let [all (db/get-all-files)]
       (if (json? json)
         (json-200 all)
-        (text-200 (interpose-append-str \newline all)))))
+        (text-200 (newline-list all)))))
 
   (GET "/sync" {}
     (future (sync-db-with-fs))
@@ -107,7 +107,7 @@
     (when-let [all (db/get-all-file-attributes filename)]
       (if (json? json)
         (json-200 all)
-        (text-200 (interpose-append-str \newline
+        (text-200 (newline-list
                     (map (fn [[k v]] (str k " " v)) all))))))
 
   (GET "/:fn/:attr" {{ filename :fn attr :attr} :params}
