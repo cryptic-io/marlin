@@ -22,6 +22,14 @@
     :body raw
     :headers { "Content-Type" "text/plain" } })
 
+(defn- json?
+  [json]
+  (and json (not (= json "0"))))
+
+(defn- interpose-append-str
+  [ch l]
+  (str (apply str (interpose ch l)) ch))
+
 (defn- set-all-attributes
   [filename size filehash]
   (db/lock-file filename)
@@ -73,9 +81,9 @@
 
   (GET "/all" {{ json :json } :params}
     (let [all (db/get-all-files)]
-      (if (and json (not (= json "0")))
+      (if (json? json)
         (json-200 all)
-        (text-200 (str (apply str (interpose \newline all)) \newline)))))
+        (text-200 (interpose-append-str \newline all)))))
 
   (GET "/sync" {}
     (future (sync-db-with-fs))
@@ -88,9 +96,12 @@
           :body (slurp fullname)
           :headers { "Content-Type" "application/octet-stream" }})))
 
-  (GET "/:fn/all" {{ filename :fn } :params}
+  (GET "/:fn/all" {{ filename :fn json :json } :params}
     (when-let [all (db/get-all-file-attributes filename)]
-      (json-200 all)))
+      (if (json? json)
+        (json-200 all)
+        (text-200 (interpose-append-str \newline
+                    (map (fn [[k v]] (str k " " v)) all))))))
 
   (GET "/:fn/:attr" {{ filename :fn attr :attr} :params}
     (when-let [value (db/get-file-attribute filename attr)]
