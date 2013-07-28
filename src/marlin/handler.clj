@@ -47,7 +47,10 @@
       (set-all-attributes % fsize fhash))))
 
 (defroutes app-routes
-  (GET "/" [] "Some info would probably go here")
+  (GET "/" [] "
+    Marlin is a REST api which sits on top of a filesystem, making it easy to
+    put and delete files and to get information about those files. See
+    https://github.com/cryptic-io/marlin for the source/docs\n")
 
   (PUT "/:fn" {{ filename :fn filehash :hash } :params body :body { content-type "content-type" } :headers}
     (log/info (str "PUT " filename " " filehash " initiated"))
