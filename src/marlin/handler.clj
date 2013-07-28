@@ -49,18 +49,22 @@
       ;If we can then try to put the file
       (let [path (fs/full-path filename)
             fullname (fs/path-join path filename)]
-        (.mkdirs (java.io.File. path))
-        (if-let [size (with-open [fileout (java.io.FileOutputStream. fullname)]
-                        (fs/safe-read-to-write body fileout filehash))]
+        (if-not (.mkdirs (java.io.File. path))
+          (do
+            (db/unlock-file filename)
+            {:status 500 :body "Could not create internal directory"})
 
-            ;If the write was successful we save stuff in db and send back 200
-            (do (set-all-attributes filename size filehash)
-                {:status 200})
+          (if-let [size (with-open [fileout (java.io.FileOutputStream. fullname)]
+                          (fs/safe-read-to-write body fileout filehash))]
 
-            ;If it wasn't we delete what we just wrote and send back 400
-            (do (.delete (java.io.File. fullname))
-                (db/unlock-file filename)
-                {:status 400 :body "File hash doesn't match"})))))
+              ;If the write was successful we save stuff in db and send back 200
+              (do (set-all-attributes filename size filehash)
+                  {:status 200})
+
+              ;If it wasn't we delete what we just wrote and send back 400
+              (do (.delete (java.io.File. fullname))
+                  (db/unlock-file filename)
+                  {:status 400 :body "File hash doesn't match"}))))))
 
   (GET "/all" {{ json :json } :params}
     (let [all (db/get-all-files)]
