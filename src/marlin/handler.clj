@@ -75,7 +75,7 @@
     (let [all (db/get-all-files)]
       (if (and json (not (= json "0")))
         (json-200 all)
-        (text-200 (apply str (interpose \newline all))))))
+        (text-200 (str (apply str (interpose \newline all)) \newline)))))
 
   (GET "/sync" {}
     (future (sync-db-with-fs))
