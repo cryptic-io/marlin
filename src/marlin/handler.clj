@@ -64,7 +64,7 @@
         ;If we can then try to put the file
         (let [path (fs/full-path filename)
               fullname (fs/path-join path filename)]
-          (if-not (.mkdirs (java.io.File. path))
+          (if-not (fs/mkdirs path)
             (do (log/warn (str "PUT " filename " - Could not create directory: " path))
                 (db/unlock-file filename)
                 {:status 500 :body "Could not create internal directory"})

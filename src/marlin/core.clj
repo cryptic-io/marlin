@@ -21,9 +21,8 @@
   (db/init)
   (fs/init)
 
-  (let [file-root (java.io.File. (config/cget :root))]
-    (when-not (or (.exists file-root) (.mkdirs file-root))
-      (log/warn (str "Could not create root file directory: " (config/cget :root) ", probably because of lack of permissions"))))
+  (when-not (fs/mkdirs (config/cget :root))
+    (log/warn (str "Could not create root file directory: " (config/cget :root) ", probably because of lack of permissions")))
 
   (when (config/cget :sync-on-start)
     (log/info "Wiping database and synchronizing it with the filesystem")

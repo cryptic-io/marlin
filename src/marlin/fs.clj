@@ -90,3 +90,10 @@
                        (map #(.getName %))
                        )]
     (doseq [filename filenames] (fun filename))))
+
+(defn mkdirs
+  "Does the equivalent of mkdir -p on linux. Returns true if the directory was successfully created
+  or already existed, false otherwise"
+  [dir]
+  (let [dirf (java.io.File. dir)]
+    (or (.exists dirf) (.mkdirs dirf))))
