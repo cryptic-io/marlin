@@ -77,11 +77,6 @@
         (json-200 all)
         (text-200 (apply str (interpose \newline all))))))
 
-  ;; TODO this is not atomic, might be better to just take it out
-  (GET "/allattributes" {}
-    (json-200
-      (reduce #(assoc %1 %2 (db/get-all-file-attributes %2)) {} (db/get-all-files))))
-
   (GET "/sync" {}
     (future (sync-db-with-fs))
     {:status 200})
