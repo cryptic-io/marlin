@@ -1,4 +1,4 @@
-(defproject marlin "master"
+(defproject marlin "0.1.0-SNAPSHOT"
   :description "A simple REST api for file access"
   :url "http://github.com/cryptic-io/marlin"
   :dependencies [[org.clojure/clojure "1.5.1"]
