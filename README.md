@@ -4,6 +4,11 @@ A simple REST api for interacting with a file system, using redis as a backend
 
 # Build
 
+You can use the pre-built jar's found in the releases tab on github, if you do
+this you only need to run `java -jar <jarfile> -h` to get started. Otherwise:
+
+## Building
+
 You will need [Leiningen][1] 2+ installed.
 
 The following will build and run a standalone jar for marlin
