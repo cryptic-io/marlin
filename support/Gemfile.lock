@@ -1,0 +1,14 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    blankslate (2.1.2.4)
+    edn (1.0.2)
+      parslet (~> 1.4.0)
+    parslet (1.4.0)
+      blankslate (~> 2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  edn
