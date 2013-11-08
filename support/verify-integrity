@@ -108,6 +108,6 @@ error_occurred =
 
       verify_integrity(Marlin.new(EDN.read(File.open(config, 'rb').read))).any?
     }
-    .reduce { |prev, cur| prev || cur }
+    .any?
 
 exit !error_occurred
