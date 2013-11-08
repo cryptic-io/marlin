@@ -1,0 +1,111 @@
+require 'rubygems'
+require 'bundler/setup'
+require 'edn'
+
+require 'optparse'
+require 'net/http'
+require 'digest'
+
+require_relative 'marlin'
+
+def verify_integrity(marlin)
+  marlin.all().map { |entry|
+    path = File.join(marlin.config[:root], *(entry.chars.take(3)), entry)
+    if not File.exists?(path)
+      $stderr.puts("#{$0}: \"#{entry}\" does not exist at \"#{path}\"")
+      next true
+    end
+
+    if not File.readable?(path)
+      $stderr.puts("#{$0}: \"#{entry}\" cannot be read at \"#{path}\"")
+      next true
+    end
+    
+    info = marlin.all(URI.encode(entry))
+    size = File.size(path)
+    if size != info[:size]
+      $stderr.puts("#{$0}: expected size of \"#{entry}\" (#{info[:size]})"\
+                   " does not match actual size of \"#{path}\" (#{size})")
+      next true
+    end
+
+    digest = Digest::SHA1.file(path).hexdigest
+    if digest != info[:hash]
+      $stderr.puts("#{$0}: expected hash of \"#{entry}\" (\"#{info[:hash]}\")"\
+                   " does not match actual hash of \"#{path}\" (#{digest})")
+      next true
+    end
+
+    false
+  }
+
+end
+
+options = {}
+OptionParser.new do |o|
+  o.banner += ' [config1 config2 ...]'
+
+  o.on('-e', '--endpoint ADDRESS', 'specify the marlin HTTP endpoint') do |a|
+    uri = URI(a)
+    if uri.scheme.nil? or not ["HTTP", "HTTPS"].include?(uri.scheme.upcase)
+      abort "#{$0}: endpoint must be http or https"
+    end
+
+    options[:endpoint] = uri
+  end
+
+  o.on('-r', '--root DIRECTORY', "specify marlin's root directory") do |d|
+    if not File.directory?(d)
+      abort "#{$0}: marlin's root directory must actually be a directory"
+    end
+
+    options[:root] = d
+  end
+
+  o.on('-h', '--help', 'print this usage message and exit') do
+    puts o
+    exit
+  end
+
+  o.parse!
+
+  # if one is set, the other must be as well
+  either = not(options[:endpoint].nil? and options[:root].nil?)
+  both = not(options[:endpoint].nil? or options[:root].nil?)
+  if either and not both
+    abort "#{$0}: must specify endpoint and root directory" 
+  end
+
+  if not either and ARGV.empty?
+    puts o
+    exit
+  end
+end
+
+if not options.empty?
+  endpoint = options[:endpoint]
+  config = {
+    :rest => {
+      :host => endpoint.hostname,
+      :port => endpoint.port
+    },
+
+    :root => options[:root]
+  }
+
+  verify_integrity(Marlin.new(config))
+end
+
+error_occurred =
+  ARGV
+    .map { |config|
+      if not (File.file?(config) and File.readable?(config))
+        abort "#{$0}: cannot open file \"#{config}\""
+        next true
+      end
+
+      verify_integrity(Marlin.new(EDN.read(File.open(config, 'rb').read))).any?
+    }
+    .reduce { |prev, cur| prev or cur }
+
+exit not(error_occurred)
