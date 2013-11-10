@@ -10,6 +10,16 @@ require 'digest'
 
 require_relative 'marlin'
 
+# Verify the integrity of a Marlin instance. An error consists of
+# 
+# * the Marlin entry not being on disk at the expected location
+# * the file being present on disk but unable to be read by the 
+#   current process
+# * the file's size does not match the size stored in redis
+# * the file's SHA-1 hash does not match the hash stored in redis
+#
+# Returns true if any error occurs and false otherwise. Errors
+# messages are written to stderr via warn.
 def verify_integrity(marlin)
   marlin.all().map { |entry|
     path = File.join(marlin.config[:root], *(entry.chars.take(3)), entry)
@@ -40,9 +50,9 @@ def verify_integrity(marlin)
 
     false
   }
-
 end
 
+# Parse the command-line options and act accordingly
 options = {}
 OptionParser.new do |o|
   o.banner += ' [config1 config2 ...]'
