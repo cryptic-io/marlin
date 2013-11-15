@@ -11,10 +11,18 @@ class Marlin
     @config
   end
 
+  def endpoint
+    @endpoint
+  end
+
+  def endpoint=(val)
+    @endpoint = val
+  end
+
   def config=(val)
     @config = val
     rest = @config[:rest]
-    @endpoint = "http://#{rest[:host]}:#{rest[:port]}"
+    self.endpoint = "http://#{rest[:host]}:#{rest[:port]}"
   end
 
   def get_response(url)
