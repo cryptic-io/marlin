@@ -16,12 +16,12 @@ def verify_consistency(marlins)
   # since all the elements of the list should be the same (as sets).
   # If not, then we can use the list of sets to give some more info
   # to aid in debugging (which instances have what lengths).
-  all = marlins.map({ |x| x.all.to_set })
+  all = marlins.map({ |i| i.all.to_set })
   reduced = all.to_set
   if reduced.length != 1
     warn "#{$0}: inconsistent number of entries in instances"
 
-    # Group endpoints by number of entries in each
+    # group endpoints by number of entries in each
     lengths = {}
     all.each_with_index { |s, i|
       if !lengths.include?(s.length)
@@ -31,25 +31,32 @@ def verify_consistency(marlins)
       lengths[s.length].push(marlins[i].endpoint)
     }
 
+    # print the number of entries and the corresponding endpoints
     lengths.each { |i|
-      endpoints = i[1].join(', ')
-      warn"#{$0}: #{i[0]} entries: #{endpoints}"
+      endpoints = lengths[i].join(', ')
+      warn "#{$0}: #{i} entries: #{endpoints}"
     }
 
-    # When we're comparing only two endpoints, show the diff
+    # when we're comparing only two endpoints, show the diff
     if all.length == 2
-      first, last = all.first, all.last
-      biggest = first <= last ? last : first
-      smallest = first == biggest ? last : first
-      diff = biggest.difference(smallest).to_a.join(', ')
-      warn "#{$0}: extra entries: #{diff}"
+      largest, smallest = (all.first.length > all.last.length 
+                            ? [all.first, all.last]
+                            : [all.last, all.first])
+      warn ("#{$0}: #{lengths[largest.length][0]} has additional entries: "
+            "#{largest.difference(smallest).to_a}")
     end
-
     return false
   end
   
-  
   # compare the size and hash on all instances of each file
+  return (reduced.map { |entry|
+            if (marlins.map { |instance| instance.all(entry) }).to_set.length != 1
+              warn "#{$0}: entry \"#{entry}\" inconsistent"
+              next false
+            end
+
+            next true
+          }).all?
 end
 
 # Parse the command-line options and act accordingly
@@ -74,7 +81,12 @@ OptionParser.new do |o|
 
 end
 
-marlins = ARGV.map { |item|
+endpoints = ARGV
+if options[:file]
+  endpoints += File.open(options[:file]),'rb').read.split(/\n/)
+end
+
+marlins = endpoints.map { |item|
   if item.upcase.start_with?('HTTP')
     uri = URI(item)
     config = {
