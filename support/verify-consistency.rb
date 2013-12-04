@@ -16,7 +16,7 @@ def verify_consistency(marlins)
   # since all the elements of the list should be the same (as sets).
   # If not, then we can use the list of sets to give some more info
   # to aid in debugging (which instances have what lengths).
-  all = marlins.map({ |i| i.all.to_set })
+  all = marlins.map { |i| i.all.to_set }
   reduced = all.to_set
   if reduced.length != 1
     warn "#{$0}: inconsistent number of entries in instances"
@@ -33,23 +33,23 @@ def verify_consistency(marlins)
 
     # print the number of entries and the corresponding endpoints
     lengths.each { |i|
-      endpoints = lengths[i].join(', ')
-      warn "#{$0}: #{i} entries: #{endpoints}"
+      endpoints = i[1].join(', ')
+      warn "#{$0}: #{i[0]} entries: #{endpoints}"
     }
 
     # when we're comparing only two endpoints, show the diff
     if all.length == 2
-      largest, smallest = (all.first.length > all.last.length 
-                            ? [all.first, all.last]
-                            : [all.last, all.first])
-      warn ("#{$0}: #{lengths[largest.length][0]} has additional entries: "
+      largest, smallest = (all.first.length > all.last.length) \
+                           ? [all.first, all.last] \
+                           : [all.last, all.first]
+      warn ("#{$0}: #{lengths[largest.length][0]} has additional entries: " \
             "#{largest.difference(smallest).to_a}")
     end
     return false
   end
   
   # compare the size and hash on all instances of each file
-  return (reduced.map { |entry|
+  return (reduced.first.map { |entry|
             if (marlins.map { |instance| instance.all(entry) }).to_set.length != 1
               warn "#{$0}: entry \"#{entry}\" inconsistent"
               next false
@@ -83,7 +83,11 @@ end
 
 endpoints = ARGV
 if options[:file]
-  endpoints += File.open(options[:file]),'rb').read.split(/\n/)
+  endpoints += File.open(options[:file],'rb').read.split(/\n/)
+end
+
+if endpoints.empty?
+  exit true
 end
 
 marlins = endpoints.map { |item|
