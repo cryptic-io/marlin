@@ -10,6 +10,9 @@ require 'net/http'
 
 require_relative 'marlin'
 
+# Verify the consistency of a collection of Marlin instances. A collection of
+# Marlin instanes is considered to be consistent if they all contain the same
+# entries with the same properties (size, hash) for each entry.
 def verify_consistency(marlins)
   # Create a list of sets of the entries from all.
   # When we convert this list to a set, it should have one element,
